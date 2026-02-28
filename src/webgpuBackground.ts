@@ -1,9 +1,12 @@
 import { renderers, type RendererName, type RendererParams } from "./renderers/index";
 
-export type Controller = {
+export type Controller<P extends Record<string, number> = Record<string, number>> = {
   start(): void;
   stop(): void;
   destroy(): void;
+  /** Live params object. Mutate it directly (e.g. via a Tweakpane binding)
+   *  and the next rendered frame will pick up the change automatically. */
+  params: P;
 };
 
 type Options = {
@@ -17,13 +20,15 @@ export async function createBackground<N extends RendererName>(
   rendererName: N,
   params: Partial<RendererParams<N>> = {},
   opts: Options = {}
-): Promise<Controller> {
+): Promise<Controller<RendererParams<N>>> {
   if (!("gpu" in navigator)) {
     throw new Error("WebGPU not supported in this browser (navigator.gpu missing).");
   }
 
   const descriptor = renderers[rendererName];
-  const mergedParams = { ...descriptor.defaultParams, ...params } as RendererParams<N>;
+  // The spread is correct at runtime; the double cast works around TypeScript's
+  // inability to resolve conditional types (RendererParams<N>) from generic constraints.
+  const mergedParams = { ...descriptor.defaultParams, ...params } as unknown as RendererParams<N>;
 
   const powerPreference = opts.powerPreference ?? "low-power";
   const respectReducedMotion = opts.respectReducedMotion ?? true;
@@ -97,15 +102,16 @@ export async function createBackground<N extends RendererName>(
     canvas.width = width;
     canvas.height = height;
 
-    context.configure({ device, format: presentationFormat, alphaMode: "premultiplied" });
+    context!.configure({ device, format: presentationFormat, alphaMode: "premultiplied" });
   }
 
   function drawFrame(timeSeconds: number) {
-    descriptor.writeUniforms(uniformData, timeSeconds, width, height, dpr, mergedParams);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    descriptor.writeUniforms(uniformData, timeSeconds, width, height, dpr, mergedParams as any);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const encoder = device.createCommandEncoder();
-    const view = context.getCurrentTexture().createView();
+    const view = context!.getCurrentTexture().createView();
 
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -160,5 +166,5 @@ export async function createBackground<N extends RendererName>(
 
   configure();
 
-  return { start, stop, destroy };
+  return { start, stop, destroy, params: mergedParams };
 }

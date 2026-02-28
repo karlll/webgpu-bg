@@ -36,6 +36,21 @@ export const perlinNoise1: RendererDescriptor<PerlinNoise1Params> = {
     // buf[14], buf[15] — padding, remain 0
   },
 
+  paramsMeta: {
+    baseR: { label: 'Base R', min: 0, max: 1, step: 0.01 },
+    baseG: { label: 'Base G', min: 0, max: 1, step: 0.01 },
+    baseB: { label: 'Base B', min: 0, max: 1, step: 0.01 },
+    colAr: { label: 'Color A R', min: 0, max: 1, step: 0.01 },
+    colAg: { label: 'Color A G', min: 0, max: 1, step: 0.01 },
+    colAb: { label: 'Color A B', min: 0, max: 1, step: 0.01 },
+    colBr: { label: 'Color B R', min: 0, max: 1, step: 0.01 },
+    colBg: { label: 'Color B G', min: 0, max: 1, step: 0.01 },
+    colBb: { label: 'Color B B', min: 0, max: 1, step: 0.01 },
+    speed: { label: 'Speed', min: 0, max: 1, step: 0.01 },
+    _pad0: { hidden: true },
+    _pad1: { hidden: true },
+  },
+
   wgsl: /* wgsl */ `
 struct Uniforms {
   time  : f32, width : f32, height : f32, dpr   : f32,

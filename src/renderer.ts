@@ -1,3 +1,13 @@
+/** UI hints for a single parameter, used by the pane builder. */
+export type ParamMeta = {
+  label?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  /** Set true to hide the parameter from the UI (e.g. padding fields). */
+  hidden?: boolean;
+};
+
 /**
  * Describes a self-contained background renderer.
  *
@@ -39,4 +49,9 @@ export type RendererDescriptor<P extends Record<string, number>> = {
     dpr: number,
     params: P,
   ): void;
+
+  /** Optional UI hints for each parameter, consumed by the pane builder.
+   *  Parameters with no entry get a plain number input.
+   *  Parameters with `hidden: true` are omitted from the UI entirely. */
+  paramsMeta?: Partial<Record<keyof P, ParamMeta>>;
 };
