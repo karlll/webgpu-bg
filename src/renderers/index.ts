@@ -1,7 +1,9 @@
 import type { RendererDescriptor } from "../renderer";
 import { perlinNoise1 } from "./perlinNoise1";
+import { circle } from "./circle";
+import { plasma } from "./plasma";
 
-export const renderers = { perlinNoise1 } as const;
+export const renderers = { perlinNoise1, circle, plasma } as const;
 
 export type RendererName = keyof typeof renderers;
 

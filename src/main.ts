@@ -1,10 +1,10 @@
 import { createBackground } from "./webgpuBackground";
-import { renderers } from "./renderers/index";
+import { renderers } from "./renderers";
 import { buildPane } from "./pane";
 
 const canvas = document.getElementById("bg") as HTMLCanvasElement;
 
-const rendererName = "perlinNoise1";
+const rendererName = "plasma";
 
 const bg = await createBackground(
   canvas,
@@ -15,4 +15,4 @@ const bg = await createBackground(
 
 bg.start();
 
-buildPane(bg.params, renderers[rendererName].paramsMeta, "perlinNoise1");
+buildPane(bg.params, renderers[rendererName].paramsMeta, rendererName);
