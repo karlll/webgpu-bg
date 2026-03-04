@@ -54,4 +54,8 @@ export type RendererDescriptor<P extends Record<string, number>> = {
    *  Parameters with no entry get a plain number input.
    *  Parameters with `hidden: true` are omitted from the UI entirely. */
   paramsMeta?: Partial<Record<keyof P, ParamMeta>>;
+
+  /** Optional image URL to load and bind as a texture_2d<f32> at @group(0) @binding(1),
+   *  with a sampler at @group(0) @binding(2). */
+  textureUrl?: string;
 };

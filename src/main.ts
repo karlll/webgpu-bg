@@ -4,7 +4,7 @@ import { buildPane } from "./pane";
 
 const canvas = document.getElementById("bg") as HTMLCanvasElement;
 
-const rendererName = "plasma";
+const rendererName = "rotozoom";
 
 const bg = await createBackground(
   canvas,

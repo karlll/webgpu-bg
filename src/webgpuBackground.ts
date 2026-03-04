@@ -61,16 +61,41 @@ export async function createBackground<N extends RendererName>(
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [
-      { binding: 0, visibility: GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } },
-    ],
-  });
+  // Optionally load a texture + sampler when the renderer declares textureUrl.
+  let gpuTexture: GPUTexture | null = null;
+  let gpuSampler: GPUSampler | null = null;
+  if (descriptor.textureUrl) {
+    const response = await fetch(descriptor.textureUrl);
+    const blob = await response.blob();
+    const bitmap = await createImageBitmap(blob);
+    gpuTexture = device.createTexture({
+      size: [bitmap.width, bitmap.height],
+      format: "rgba8unorm",
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    device.queue.copyExternalImageToTexture({ source: bitmap }, { texture: gpuTexture }, [bitmap.width, bitmap.height]);
+    gpuSampler = device.createSampler({ addressModeU: "repeat", addressModeV: "repeat", magFilter: "linear", minFilter: "linear" });
+  }
 
-  const bindGroup = device.createBindGroup({
-    layout: bindGroupLayout,
-    entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
-  });
+  const bglEntries: GPUBindGroupLayoutEntry[] = [
+    { binding: 0, visibility: GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } },
+  ];
+  const bgEntries: GPUBindGroupEntry[] = [
+    { binding: 0, resource: { buffer: uniformBuffer } },
+  ];
+  if (gpuTexture && gpuSampler) {
+    bglEntries.push(
+      { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: {} },
+      { binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: {} },
+    );
+    bgEntries.push(
+      { binding: 1, resource: gpuTexture.createView() },
+      { binding: 2, resource: gpuSampler },
+    );
+  }
+
+  const bindGroupLayout = device.createBindGroupLayout({ entries: bglEntries });
+  const bindGroup = device.createBindGroup({ layout: bindGroupLayout, entries: bgEntries });
 
   const shaderModule = device.createShaderModule({ code: descriptor.wgsl });
 
@@ -162,6 +187,7 @@ export async function createBackground<N extends RendererName>(
     ro.disconnect();
     document.removeEventListener("visibilitychange", onVisibility);
     uniformBuffer.destroy();
+    gpuTexture?.destroy();
   }
 
   configure();
